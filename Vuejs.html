@@ -5,66 +5,77 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vuejs</title>
-    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+    <script src="https://unpkg.com/vue"></script>
 </head>
 
 <body>
-    <!-- VD6 -->
-    <div id="app-6">
-        <myheader></myheader>
-    </div>
-    <br>
-    <!-- end vd6 -->
+    <div id="todoApp">
+        <h3>{{message}}</h3>
+        <form name="todo-form" method="post" action="" v-on:submit.prevent="addTask">
+            <input name="add-todo" v-model="addTodoInput" type="text" v-bind:class="{error: hasError}" />
+            <button type="submit">Add</button>
+        </form>
 
-    <!-- VD7 -->
-    <div id="app-7">
-        <p>Những thứ họ mua:</p>
-        <ol>
-            <!--
-            Ở đây chúng ta cung cấp một object "todo" cho mỗi component
-            "todo-item". Bằng cách này nội dung của từng component trở nên động.
-            Mỗi component cũng sẽ nhận một thuộc tính "key". Chúng ta sẽ
-            nói thêm về thuộc tính này sau.
-          -->
-            <todo-item v-for="item in groceryList" v-bind:todo="item" v-bind:key="item.id">
-            </todo-item>
-        </ol>
+        <div class="todo-lists" v-if="lists.length">
+            <h3>My Todo Tasks</h3>
+            <ul>
+                <li v-for="(list, index) in filterLists" :key="list.id">
+                    <input type="checkbox" v-bind:id="'todo-' + index" v-on:change="completeTask($event, list)" v-bind:checked="list.isComplete" />
+                    <span class="title" contenteditable="true" v-on:keydown.enter="updateTask($event, list)" v-on:blur="updateTask($event, list)" v-bind:class="{completed: list.isComplete}">{{list.title}}</span>
+                    <span class="remove" v-on:click="removeTask(list)">x</span></li>
+            </ul>
+        </div>
     </div>
-    <!-- end vd7 -->
     <script>
-        Vue.component('myheader', {
-            template: '<h1>Đây là một đề mục todo</h1>'
-        })
-        var app = new Vue({
-                el: '#app-6',
-                data: {
-                    message: 'Do you wanna build a Vue app?'
-                }
-            })
-            // 
-
-        Vue.component('todo-item', {
-            props: ['todo'],
-            template: '<li>{{ todo.text }}</li>'
-        })
-        var app7 = new Vue({
-            el: '#app-7',
+        var todoApp = new Vue({
+            el: '#todoApp',
             data: {
-                groceryList: [{
-                    id: 0,
-                    text: 'Cà pháo'
-                }, {
-                    id: 1,
-                    text: 'Mắm tôm'
-                }, {
-                    id: 2,
-                    text: 'Miễn ăn được là được'
-                }]
+                message: 'Welcome to Todo App',
+                addTodoInput: '',
+                lists: [],
+                hasError: false
+            },
+            computed: {
+                filterLists: function() {
+                    return _.orderBy(this.lists, ['isComplete', false])
+                }
+            },
+            methods: {
+                addTask: function(e) {
+                    //e.preventDefault();
+
+                    if (!this.addTodoInput) {
+                        this.hasError = true;
+                        return;
+                    }
+
+                    this.hasError = false;
+                    this.lists.push({
+                        id: this.lists.length + 1,
+                        title: this.addTodoInput,
+                        isComplete: false
+                    });
+
+                    this.addTodoInput = '';
+                },
+                removeTask: function(list) {
+                    var index = _.findIndex(this.lists, list);
+                    this.lists.splice(index, 1);
+                },
+                updateTask: function(e, list) {
+                    e.preventDefault();
+                    list.title = e.target.innerText;
+                    e.target.blur();
+                },
+                completeTask: function(e, list) {
+                    list.isComplete = !list.isComplete;
+                }
+
             }
         })
     </script>
-
-
 </body>
 
 </html>
